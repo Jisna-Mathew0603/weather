@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Report</title>
+  <link rel="stylesheet" href="https://assets.ubuntu.com/v1/vanilla-framework-version-4.9.0.min.css" />
+  <style>
+    /* CSS styles */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-image: url('./images/pexels-pixabay-209831.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: rgba(255, 255, 255, 0.7);
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    .weather-info {
+      text-align: center;
+    }
+
+    .weather-icon {
+      width: 100px;
+      height: 100px;
+      display: block;
+      margin: 0 auto 10px;
+    }
+
+    .weather-details {
+      margin-top: 20px;
+      color: #333;
+    }
+
+    .weather-details p {
+      margin: 5px 0;
+    }
+
+    .error-message {
+      color: red;
+      font-style: italic;
+    }
+
+    .city-form {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .city-form input[type="text"] {
+      padding: 10px;
+      width: 200px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .city-form button {
+      padding: 10px 15px;
+      border-radius: 5px;
+      background-color: #333;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1 id="title">Weather Report</h1>
+    </header>
+    <div class="city-form">
+      <input type="text" id="cityInput" placeholder="Enter city name" />
+      <button id="getWeatherBtn">Get Weather</button>
+    </div>
+    <div class="weather-info" id="weatherCurrent">
+      <div class="weather-details">
+        <p>Loading weather data...</p>
+      </div>
+    </div>
+  </div>
+  <!-- JavaScript code -->
+  <script>
+    const MY_NAME = "Jisna";
+    const API_KEY = "6ad73c025025595ce138a33f7cc493b0";
+
+    // Map of common weather conditions from English to French
+    const weatherTranslations = {
+      "clear sky": "ciel dégagé",
+      "few clouds": "quelques nuages",
+      "scattered clouds": "nuages dispersés",
+      "broken clouds": "nuages fragmentés",
+      "overcast clouds": "nuages couverts",
+      "light rain": "pluie légère",
+      "rain": "pluie",
+      "thunderstorm": "orage",
+      "snow": "neige",
+      "mist": "brume"
+    };
+
+    // Function to load current weather data for a given city
+    function loadCurrentWeather(city) {
+      const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${API_KEY}`;
+
+      function handler() {
+        if (this.readyState === 4) {
+          if (this.status === 200) {
+            try {
+              const data = JSON.parse(this.responseText);
+              console.log('loaded and parsed weather data', data);
+              const weather = data.weather[0];
+              const main = data.main;
+              const wind = data.wind;
+
+              const feelsLikeFahrenheit = (main.feels_like * 9 / 5) + 32;
+
+              const descriptionFrench = weatherTranslations[weather.description.toLowerCase()] || "Non disponible";
+
+              const iconUrl = `https://openweathermap.org/img/wn/${weather.icon}@2x.png`;
+
+              let html = '';
+              html += `<h3>${data.name}, ${data.sys.country}</h3>`;
+              html += `<img src="${iconUrl}" alt="${weather.main}" class="weather-icon" /><br />`;
+              html += `Temp: ${main.temp}&#8451<br />`;
+              html += `Feels like: ${feelsLikeFahrenheit}&#8457<br />`;
+              html += `Min Temp: ${main.temp_min}&#8451<br />`;
+              html += `Max Temp: ${main.temp_max}&#8451<br />`;
+              html += `Wind Speed: ${wind.speed} m/s<br />`;
+              html += `Description : ${descriptionFrench}<br />`;
+
+              document.querySelector("#weatherCurrent").innerHTML = html;
+
+            } catch (reason) {
+              document.querySelector("#weatherCurrent").innerHTML = `There was an error processing the weather data: ${JSON.stringify(reason)}`;
+            }
+          } else {
+            document.querySelector("#weatherCurrent").innerHTML = `Error loading weather data: code ${this.status}, ${this.responseText}`;
+          }
+        }
+      }
+
+      function handleOnError(error) {
+        document.querySelector("#weatherCurrent").innerHTML = `Error loading weather data: ${JSON.stringify(error)}`;
+      }
+
+      const xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = handler;
+      xhttp.onerror = handleOnError;
+      xhttp.open("GET", weatherUrl, true);
+      document.querySelector("#weatherCurrent").innerHTML = 'Loading weather data...';
+      xhttp.send();
+    }
+
+    // Event listener for page load
+    addEventListener("load", (event) => {
+      if (MY_NAME) {
+        document.querySelector("#title").innerHTML = `${MY_NAME}'s Weather Report`;
+      } else {
+        document.querySelector("#title").innerHTML = 'MY_NAME has not been set, yet';
+      }
+    });
+
+    // Event listener for the Get Weather button
+    document.querySelector("#getWeatherBtn").addEventListener("click", () => {
+      const city = document.querySelector("#cityInput").value;
+      if (city) {
+        loadCurrentWeather(city);
+      } else {
+        alert("Please enter a city name!");
+      }
+    });
+  </script>
+</body>
+
+</html>
